@@ -40,7 +40,7 @@ class Compartmental_model:
     def calculate_cost(self, predicted_I: List[int]):
         return self.cost_function(predicted_I, self.I_counts)
     
-    def solve(self, params: List[float], initial_counts: List[int], t_length: int, pos: int =None):
+    def solve(self, params: List[float], initial_counts: List[int], t_length: int, pos: int = None):
         sol = scipy.integrate.odeint(self.DE, initial_counts, range(0, t_length), args=tuple(params)).T
         if pos:
             return sol[pos]
