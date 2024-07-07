@@ -45,14 +45,14 @@ print(df_count.shape)
 
 
 sequence = df_count['count'].to_numpy().reshape(-1, 1)
-sequence = sequence[350:400] # forth wave
+wave_4 = sequence[350:400] # forth wave
 
-hmm_model = hmm.MultinomialHMM(n_components=2, verbose=False, n_iter=1000, tol=1e-3, algorithm='map')
-hmm_model.fit(sequence)
+hmm_model = hmm.MultinomialHMM(n_components=2, verbose=False, n_iter=1000, tol=1e-3)
+hmm_model.fit(wave_4)
 
 print(hmm_model.transmat_)
 
 # model evaluation
-print(hmm_model.score(sequence))
-print(hmm_model.aic(sequence))
-print(hmm_model.bic(sequence))
+print(hmm_model.score(wave_4))
+print(hmm_model.aic(wave_4))
+print(hmm_model.bic(wave_4))
