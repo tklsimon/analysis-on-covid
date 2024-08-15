@@ -1,5 +1,6 @@
 import pandas as pd
 
+
 def print_missing_val_count(df: pd.DataFrame) -> None:
     # Missing value counts
     df_na_cnt = df.isnull().sum()
@@ -25,6 +26,7 @@ def change_date_format(df: pd.DataFrame,
         .dt.strftime(new_date_format) \
         .fillna('N/A')
 
+
 def get_year_month_part(df: pd.DataFrame,
                         column_name: str,
                         date_format: str) -> None:
@@ -36,6 +38,7 @@ def get_year_month_part(df: pd.DataFrame,
                            new_column_name,
                            date_part_format)
 
+
 def one_hot_encoding(df: pd.DataFrame,
                      column_name: str) -> pd.DataFrame:
     distinct_values = set(df[column_name])
@@ -45,3 +48,17 @@ def one_hot_encoding(df: pd.DataFrame,
         df[new_column_name] = df[column_name].apply(lambda col: 1 if col == value else 0)
     
     return df
+
+
+def get_date_count(df: pd.DataFrame,
+                   col: str,
+                   date_format: str) -> pd.DataFrame:
+    df[col] = pd.to_datetime(df[col], format=date_format, errors='coerce')
+    agg_df = df.groupby(col)[col].count()
+    
+    date_idx = pd.date_range(agg_df.index.min(), agg_df.index.max())
+    agg_series = pd.Series(agg_df)
+    agg_series.index = pd.DatetimeIndex(agg_series.index)
+    agg_series = agg_series.reindex(date_idx, fill_value=0)
+    
+    return pd.DataFrame({col: agg_series.index, 'count': agg_series.values})
