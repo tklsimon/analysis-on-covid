@@ -1,5 +1,39 @@
 import pandas as pd
 
+def print_cumulative_columns(df: pd.DataFrame) -> None:
+    col_list = df.columns
+    nbr_col_list = [col for col in col_list if 'NUMBER' in col.upper()]
+    
+    cuml_col_list = []
+    non_cuml_col_list = []
+    for col in nbr_col_list:
+        if df[~df[col].isna()][col].is_monotonic:
+            cuml_col_list.append(col)
+        else:
+            non_cuml_col_list.append(col)
+    
+    print('The cumulative columns in dataset are:')
+    print(*cuml_col_list, sep = "\n")
+    print('')
+    print('The non-cumulative columns in dataset are:')
+    print(*non_cuml_col_list, sep = "\n")
+
+def print_range_of_missing_values(df: pd.DataFrame,
+                                  date_col: str,
+                                  target_col: str) -> None:
+    missing_ind = df[target_col].isna()
+    df_agg_result = df[missing_ind].groupby((~missing_ind).cumsum())
+    if len(df_agg_result) > 0:
+        print(f'There are missing values in the column "{target_col}":')
+        for _, df_temp in df_agg_result:
+            missing_date_list = [*df_temp[date_col].astype('str')]
+            if len(missing_date_list) > 1:
+                print(f'From {missing_date_list[0]} to {missing_date_list[-1]}')
+            else:
+                print(f'{missing_date_list[0]}')
+    else:
+        print(f'There is no missing values in the column "{target_col}".')
+    print('')
 
 def print_missing_val_count(df: pd.DataFrame) -> None:
     # Missing value counts

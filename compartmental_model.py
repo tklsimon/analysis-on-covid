@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from typing import List
-from sklearn import metrics
 
 
 def composite_function(f, g): 
@@ -20,7 +19,6 @@ def plot_fitted_result(predict_count_lists: List[List[int]],
     plt.legend(classes + ['Original Data'])
     plt.plot()
 
-
 # Compartmental Model (Base Class)
 class Compartmental_model:
     def __init__(self,
@@ -32,7 +30,7 @@ class Compartmental_model:
         self.I_pos = I_pos
         self.t_length = len(I_counts)
     
-    def DE(initial_counts: List[int], t, *params: List[float]):
+    def DE(counts: List[int], t, *params: List[float]):
         pass
 
     @staticmethod
@@ -42,10 +40,10 @@ class Compartmental_model:
     def calculate_cost(self, predicted_I: List[int]):
         return self.cost_function(predicted_I, self.I_counts)
     
-    def solve(self, params: List[float], initial_counts: List[int], t_length: int, pos: int=None):
+    def solve(self, params: List[float], initial_counts: List[int], t_length: int, I_pos: int=None):
         sol = scipy.integrate.odeint(self.DE, initial_counts, range(0, t_length), args=tuple(params)).T
-        if pos:
-            return sol[pos]
+        if I_pos:
+            return sol[I_pos]
         else:
             return sol
     
@@ -68,12 +66,12 @@ class SIR_model(Compartmental_model):
         self.init_params = init_params
     
     @staticmethod
-    def DE(initial_counts: List[int], t, *params: List[float]):
-        if len(initial_counts) != 3:
-            raise Exception('Length of initial_counts should be 3.')
+    def DE(counts: List[int], t, *params: List[float]):
+        if len(counts) != 3:
+            raise Exception('Length of counts should be 3.')
         if len(params) != 2:
             raise Exception('Number of parameters should be 2.')
-        S, I, R = initial_counts[:3]
+        S, I, R = counts[:3]
         beta, gamma = params[:2]
         
         d_S = -beta*S*I
@@ -90,12 +88,12 @@ class SIS_model(Compartmental_model):
         self.init_params = init_params
     
     @staticmethod
-    def DE(initial_counts: List[int], t, *params: List[float]):
-        if len(initial_counts) != 2:
-            raise Exception('Length of initial_counts should be 2.')
+    def DE(counts: List[int], t, *params: List[float]):
+        if len(counts) != 2:
+            raise Exception('Length of counts should be 2.')
         if len(params) != 2:
             raise Exception('Number of parameters should be 2.')
-        S, I = initial_counts[:2]
+        S, I = counts[:2]
         beta, gamma = params[:2]
         
         d_S = -beta*S*I + gamma*I
@@ -111,12 +109,12 @@ class SIRS_model(Compartmental_model):
         self.init_params = init_params
     
     @staticmethod
-    def DE(initial_counts: List[int], t, *params: List[float]):
-        if len(initial_counts) != 3:
-            raise Exception('Length of initial_counts should be 3.')
+    def DE(counts: List[int], t, *params: List[float]):
+        if len(counts) != 3:
+            raise Exception('Length of counts should be 3.')
         if len(params) != 3:
             raise Exception('Number of parameters should be 3.')
-        S, I, R = initial_counts[:3]
+        S, I, R = counts[:3]
         beta, gamma, sigma = params[:3]
         
         d_S = -beta*S*I + sigma*R
@@ -133,12 +131,12 @@ class SEIR_model(Compartmental_model):
         self.init_params = init_params
     
     @staticmethod
-    def DE(initial_counts: List[int], t, *params: List[float]):
-        if len(initial_counts) != 4:
-            raise Exception('Length of initial_counts should be 4.')
+    def DE(counts: List[int], t, *params: List[float]):
+        if len(counts) != 4:
+            raise Exception('Length of counts should be 4.')
         if len(params) != 3:
             raise Exception('Number of parameters should be 3.')
-        S, E, I, R = initial_counts[:4]
+        S, E, I, R = counts[:4]
         beta, aleph, gamma = params[:3]
         
         d_S = -beta*S*I
