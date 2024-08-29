@@ -2,7 +2,9 @@ import pandas as pd
 
 def print_cumulative_columns(df: pd.DataFrame) -> None:
     col_list = df.columns
-    nbr_col_list = [col for col in col_list if 'NUMBER' in col.upper()]
+    nbr_col_list = [col for col in col_list if \
+                        'NUMBER' in col.upper() or \
+                        'CNT' in col.upper()]
     
     cuml_col_list = []
     non_cuml_col_list = []
@@ -18,21 +20,21 @@ def print_cumulative_columns(df: pd.DataFrame) -> None:
     print('The non-cumulative columns in dataset are:')
     print(*non_cuml_col_list, sep = "\n")
 
-def print_range_of_missing_values(df: pd.DataFrame,
-                                  date_col: str,
-                                  target_col: str) -> None:
+def print_range_of_data(df: pd.DataFrame,
+                        date_col: str,
+                        target_col: str) -> None:
     missing_ind = df[target_col].isna()
-    df_agg_result = df[missing_ind].groupby((~missing_ind).cumsum())
+    df_agg_result = df[~missing_ind].groupby((missing_ind).cumsum())
     if len(df_agg_result) > 0:
-        print(f'There are missing values in the column "{target_col}":')
+        print(f'The column "{target_col}" has data between:')
         for _, df_temp in df_agg_result:
-            missing_date_list = [*df_temp[date_col].astype('str')]
-            if len(missing_date_list) > 1:
-                print(f'From {missing_date_list[0]} to {missing_date_list[-1]}')
+            date_list = [*df_temp[date_col].astype('str')]
+            if len(date_list) > 1:
+                print(f'From {date_list[0]} to {date_list[-1]}')
             else:
-                print(f'{missing_date_list[0]}')
+                print(f'{date_list[0]}')
     else:
-        print(f'There is no missing values in the column "{target_col}".')
+        print(f'The column "{target_col}" does not have any data.')
     print('')
 
 def print_missing_val_count(df: pd.DataFrame) -> None:
@@ -47,7 +49,7 @@ def print_missing_val_count(df: pd.DataFrame) -> None:
             if na_cnt > 0:
                 print(f'{col}: {na_cnt} ({100*na_cnt/df_record_cnt:0.1f}%)')
     else:
-        print('The dataframe does not have missing values.')
+        print('This dataframe does not have missing values.')
 
 
 def change_date_format(df: pd.DataFrame,
