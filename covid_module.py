@@ -1,5 +1,9 @@
 import pandas as pd
 
+from statsmodels.tsa.stattools import adfuller
+from typing import List
+
+
 def print_cumulative_columns(df: pd.DataFrame) -> None:
     col_list = df.columns
     nbr_col_list = [col for col in col_list if \
@@ -20,6 +24,7 @@ def print_cumulative_columns(df: pd.DataFrame) -> None:
     print('The non-cumulative columns in dataset are:')
     print(*non_cuml_col_list, sep = "\n")
 
+
 def print_range_of_data(df: pd.DataFrame,
                         date_col: str,
                         target_col: str) -> None:
@@ -37,53 +42,52 @@ def print_range_of_data(df: pd.DataFrame,
         print(f'The column "{target_col}" does not have any data.')
     print('')
 
+
 def print_missing_val_count(df: pd.DataFrame) -> None:
     # Missing value counts
-    df_na_cnt = df.isnull().sum()
-    df_record_cnt = df.shape[0]
+    df_na_count = df.isnull().sum()
+    df_record_count = df.shape[0]
     
     # Print the count of missing value for each feature
-    if df_na_cnt.sum() > 0:
+    if df_na_count.sum() > 0:
         print('The following columns have missing values:')
-        for col, na_cnt in zip(df_na_cnt.index, df_na_cnt.values):
-            if na_cnt > 0:
-                print(f'{col}: {na_cnt} ({100*na_cnt/df_record_cnt:0.1f}%)')
+        for col, na_count in zip(df_na_count.index, df_na_count.values):
+            if na_count > 0:
+                print(f'{col}: {na_count} ({100*na_count/df_record_count:0.1f}%)')
     else:
         print('This dataframe does not have missing values.')
 
 
 def change_date_format(df: pd.DataFrame,
-                       old_column_name: str,
+                       old_col_name: str,
                        old_date_format: str,
-                       new_column_name: str,
+                       new_col_name: str,
                        new_date_format: str) -> None:
-    df[new_column_name] = \
-        pd.to_datetime(df[old_column_name], format=old_date_format, errors='coerce') \
+    df[new_col_name] = \
+        pd.to_datetime(df[old_col_name], format=old_date_format, errors='coerce') \
         .dt.strftime(new_date_format) \
         .fillna('N/A')
 
 
 def get_year_month_part(df: pd.DataFrame,
-                        column_name: str,
+                        col_name: str,
                         date_format: str) -> None:
     for (date_part, date_part_format) in [('year','%Y'), ('year_month','%Y%m')]:
-        new_column_name = column_name.removesuffix('_date') + '_' + date_part
+        new_col_name = col_name.removesuffix('_date') + '_' + date_part
         change_date_format(df,
-                           column_name,
+                           col_name,
                            date_format,
-                           new_column_name,
+                           new_col_name,
                            date_part_format)
 
 
 def one_hot_encoding(df: pd.DataFrame,
-                     column_name: str) -> pd.DataFrame:
-    distinct_values = set(df[column_name])
+                     col_name: str) -> None:
+    distinct_values = set(df[col_name])
     
     for value in distinct_values:
-        new_column_name = column_name + '_' + value
-        df[new_column_name] = df[column_name].apply(lambda col: 1 if col == value else 0)
-    
-    return df
+        new_col_name = col_name + '_' + value
+        df[new_col_name] = df[col_name].apply(lambda col: 1 if col == value else 0)
 
 
 def get_date_count(df: pd.DataFrame,
@@ -98,3 +102,28 @@ def get_date_count(df: pd.DataFrame,
     agg_series = agg_series.reindex(date_idx, fill_value=0)
     
     return pd.DataFrame({col: agg_series.index, 'count': agg_series.values})
+
+
+def add_lag_columns(df: pd.DataFrame,
+                    col: str,
+                    lag_nbr: int) -> None:
+    for nbr in range(1, lag_nbr+1):
+        df[f'{col}_lag{nbr}'] = df[col].shift(nbr).fillna(0)
+
+
+def stationary_and_difference(df: pd.DataFrame,
+                              col_list: List[str]=None) -> None:
+    if col_list is None:
+        col_list = df.columns
+    for col in col_list:
+        p_value = adfuller(df[col])[1]
+        if p_value > 0.05:
+            print(f'The column {col} has ADF p-value {p_value:.5f} which is non-stationary')
+            
+            new_diff_col = col + '_diff_1'
+            print(f'Creating a difference column {new_diff_col} ...')
+            df[new_diff_col] = df[col].diff().fillna(0)
+            print(f'Droping the original column {col} ...')
+            df.drop(col, axis=1, inplace=True)
+        else:
+            print(f'The column {col} has ADF p-value {p_value:.5f} which is stationary.')
