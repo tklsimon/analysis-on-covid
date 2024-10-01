@@ -23,7 +23,7 @@ def plot_compartmental_model_result(model_output,
     plt.xlabel('Days')
     plt.ylabel('Count')
     plt.grid('True')
-    plt.legend(classes + ['Predicted case counts'] + ['True case counts'])
+    plt.legend(classes + ['Predicted new case counts'] + ['True new case counts'])
     plt.plot()
 
 # Discrete Compartmental Model (Base Class)
@@ -110,7 +110,7 @@ class Discrete_SIR_model(Discrete_Compartmental_model):
         plus_list = [DI_plus_list, DR_plus_list]
         count_list = [S_list, I_list, R_list]
         if output == 'DI_plus_list':
-            return plus_list[0]
+            return DI_plus_list
         elif output == 'plus_list':
             return plus_list
         elif output == 'count_list':
@@ -157,7 +157,7 @@ class Discrete_SIS_model(Discrete_Compartmental_model):
         plus_list = [DI_plus_list, DS_plus_list]
         count_list = [S_list, I_list]
         if output == 'DI_plus_list':
-            return plus_list[0]
+            return DI_plus_list
         elif output == 'plus_list':
             return plus_list
         elif output == 'count_list':
@@ -211,7 +211,7 @@ class Discrete_SIRS_model(Discrete_Compartmental_model):
         plus_list = [DI_plus_list, DR_plus_list, DS_plus_list]
         count_list = [S_list, I_list, R_list]
         if output == 'DI_plus_list':
-            return plus_list[0]
+            return DI_plus_list
         elif output == 'plus_list':
             return plus_list
         elif output == 'count_list':
@@ -266,7 +266,7 @@ class Discrete_SEIR_model(Discrete_Compartmental_model):
         plus_list = [DE_plus_list, DI_plus_list, DR_plus_list]
         count_list = [S_list, E_list, I_list, R_list]
         if output == 'DI_plus_list':
-            return plus_list[1]
+            return DI_plus_list
         elif output == 'plus_list':
             return plus_list
         elif output == 'count_list':

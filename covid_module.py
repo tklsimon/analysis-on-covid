@@ -81,27 +81,27 @@ def get_year_month_part(df: pd.DataFrame,
                            date_part_format)
 
 
-def one_hot_encoding(df: pd.DataFrame,
-                     col_name: str) -> None:
-    distinct_values = set(df[col_name])
+# def one_hot_encoding(df: pd.DataFrame,
+#                      col_name: str) -> None:
+#     distinct_values = set(df[col_name])
     
-    for value in distinct_values:
-        new_col_name = col_name + '_' + value
-        df[new_col_name] = df[col_name].apply(lambda col: 1 if col == value else 0)
+#     for value in distinct_values:
+#         new_col_name = col_name + '_' + value
+#         df[new_col_name] = df[col_name].apply(lambda col: 1 if col == value else 0)
 
 
-def get_date_count(df: pd.DataFrame,
-                   col: str,
-                   date_format: str) -> pd.DataFrame:
-    df[col] = pd.to_datetime(df[col], format=date_format, errors='coerce')
-    agg_df = df.groupby(col)[col].count()
+# def get_date_count(df: pd.DataFrame,
+#                    col: str,
+#                    date_format: str) -> pd.DataFrame:
+#     df[col] = pd.to_datetime(df[col], format=date_format, errors='coerce')
+#     agg_df = df.groupby(col)[col].count()
     
-    date_idx = pd.date_range(agg_df.index.min(), agg_df.index.max())
-    agg_series = pd.Series(agg_df)
-    agg_series.index = pd.DatetimeIndex(agg_series.index)
-    agg_series = agg_series.reindex(date_idx, fill_value=0)
+#     date_idx = pd.date_range(agg_df.index.min(), agg_df.index.max())
+#     agg_series = pd.Series(agg_df)
+#     agg_series.index = pd.DatetimeIndex(agg_series.index)
+#     agg_series = agg_series.reindex(date_idx, fill_value=0)
     
-    return pd.DataFrame({col: agg_series.index, 'count': agg_series.values})
+#     return pd.DataFrame({col: agg_series.index, 'count': agg_series.values})
 
 
 def add_lag_columns(df: pd.DataFrame,
