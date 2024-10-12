@@ -235,17 +235,17 @@ class Discrete_SEIR_model(Discrete_Compartmental_model):
               t_length,
               output=None):
         S_0, E_0, I_0, R_0 = initial_counts
-        beta, aleph, gamma = params
+        beta, alpha, gamma = params
     
-        beta = min(max(beta, 0), 1)
-        aleph = min(max(aleph, 0), 1)
-        gamma = min(max(gamma, 0), 1)
+        beta = min(max(beta, 0.000001), 1)
+        alpha = min(max(alpha, 0.001), 1)
+        gamma = min(max(gamma, 0.001), 1)
     
         S_list, E_list, I_list, R_list = [S_0], [E_0], [I_0], [R_0]
         DE_plus_list, DI_plus_list, DR_plus_list = [E_0], [I_0], [R_0]
         for _ in range(t_length-1):
             DE_plus = int(beta*S_list[-1]*I_list[-1])
-            DI_plus = int(aleph*E_list[-1])
+            DI_plus = int(alpha*E_list[-1])
             DR_plus = int(gamma*I_list[-1])
     
             if DE_plus > S_list[-1]:
