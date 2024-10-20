@@ -17,16 +17,9 @@ def print_feature_importance(fitted_model) -> None:
         print(f'{i+1}. {feat_name_list[impt_order_index_list[i]]}: {impt_list[impt_order_index_list[i]]:.4f}')
 
 
-def print_random_forest_importance(X, y, random_state) -> None:
+def fit_and_print_random_forest_feature_importance(X, y, random_state) -> None:
     # Split into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=random_state)
-    
-    # # Regression Tree
-    # reg_tree_model = DecisionTreeRegressor(random_state=random_state)
-    # reg_tree_model.fit(X_train, y_train)
-    # reg_tree_y_pred = reg_tree_model.predict(X_test)
-    # print(f'Decision Tree MSE: {mean_squared_error(reg_tree_y_pred, y_test): .6}')
-    # print_feature_importance(reg_tree_model)
     
     # Random Forest
     random_forest_model = RandomForestRegressor(random_state=random_state)
