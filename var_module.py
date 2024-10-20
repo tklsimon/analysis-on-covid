@@ -114,9 +114,10 @@ def get_significant_variable(var_model: VARResults,
     if isinstance(y_col_list, str):
         y_col_list = [y_col_list]
     
-    y_col_list = [col for col in var_data.columns if col.split('_diff_')[0] in y_col_list]
-    
     var_model_pvalues_df = var_model.pvalues
+    
+    y_col_list = [col for col in var_model_pvalues_df.columns \
+                      if col.split('_diff_')[0] in y_col_list]
 
     signf_cols_list = []
     for y_col in y_col_list: 
