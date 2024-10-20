@@ -1,7 +1,10 @@
 import pandas as pd
 
-from statsmodels.tsa.stattools import adfuller
-from typing import List
+
+def print_or_not(string: str,
+                 print_ind: bool=True) -> None:
+    if print_ind:
+        print(string)
 
 
 def print_cumulative_columns(df: pd.DataFrame) -> None:
@@ -88,42 +91,3 @@ def get_year_month_part(df: pd.DataFrame,
 #     for value in distinct_values:
 #         new_col_name = col_name + '_' + value
 #         df[new_col_name] = df[col_name].apply(lambda col: 1 if col == value else 0)
-
-
-# def get_date_count(df: pd.DataFrame,
-#                    col: str,
-#                    date_format: str) -> pd.DataFrame:
-#     df[col] = pd.to_datetime(df[col], format=date_format, errors='coerce')
-#     agg_df = df.groupby(col)[col].count()
-    
-#     date_idx = pd.date_range(agg_df.index.min(), agg_df.index.max())
-#     agg_series = pd.Series(agg_df)
-#     agg_series.index = pd.DatetimeIndex(agg_series.index)
-#     agg_series = agg_series.reindex(date_idx, fill_value=0)
-    
-#     return pd.DataFrame({col: agg_series.index, 'count': agg_series.values})
-
-
-def add_lag_columns(df: pd.DataFrame,
-                    col: str,
-                    lag_nbr: int) -> None:
-    for nbr in range(1, lag_nbr+1):
-        df[f'{col}_lag{nbr}'] = df[col].shift(nbr).fillna(0)
-
-
-def stationary_and_difference(df: pd.DataFrame,
-                              col_list: List[str]=None) -> None:
-    if col_list is None:
-        col_list = df.columns
-    for col in col_list:
-        p_value = adfuller(df[col])[1]
-        if p_value > 0.05:
-            print(f'The column {col} has ADF p-value {p_value:.5f} which is non-stationary')
-            
-            new_diff_col = col + '_diff_1'
-            print(f'Creating a difference column {new_diff_col} ...')
-            df[new_diff_col] = df[col].diff().fillna(0)
-            print(f'Droping the original column {col} ...')
-            df.drop(col, axis=1, inplace=True)
-        else:
-            print(f'The column {col} has ADF p-value {p_value:.5f} which is stationary.')
