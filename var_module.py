@@ -45,11 +45,12 @@ def stationary_and_difference_loop(df: pd.DataFrame,
                                    print_ind: bool=False) -> None:
     if col_list is None:
         col_list = df.columns
+    
     nbr = 1
-    print('Running stationary_and_difference using for loop ...\n')
+    print('Running the function stationary_and_difference using for loop ...\n')
     while True:
         if len(col_list) == 0:
-            print('All columns are now stationary.')
+            print('All target columns are now stationary.')
             break
         if nbr > max_iter:
             print(f'Maximum iteration {max_iter} reached. Stopped.')
@@ -61,14 +62,15 @@ def stationary_and_difference_loop(df: pd.DataFrame,
 
 
 def print_model_result(summary_str: str,
-                       col: str) -> None:
+                       y_col_list: List[str]) -> None:
     summary_split_list = summary_str.split('\n')
     summary_result_index = [index for index, str in enumerate(summary_split_list) if \
                                 str.startswith('Results for equation') or str.startswith('Correlation matrix of residuals')]
     
-    for i in range(len(summary_result_index)):
-        if col in summary_split_list[summary_result_index[i]]:
-            print('\n'.join(summary_split_list[summary_result_index[i]:summary_result_index[i+1]]))
+    for y_col in y_col_list:
+        for i in range(len(summary_result_index)):
+            if y_col in summary_split_list[summary_result_index[i]]:
+                print('\n'.join(summary_split_list[summary_result_index[i]:summary_result_index[i+1]]))
 
 
 def fit_var_model(var_data: pd.DataFrame,
@@ -81,6 +83,7 @@ def fit_var_model(var_data: pd.DataFrame,
         y_col_list = [y_col_list]
         
     X_col_list = [col for col in var_data.columns if col.split('_diff_')[0] in X_col_list]
+    y_col_list = [col for col in var_data.columns if col.split('_diff_')[0] in y_col_list]
     
     # Select required columns
     var_data = var_data[X_col_list + y_col_list]
@@ -99,10 +102,9 @@ def fit_var_model(var_data: pd.DataFrame,
     print(f'Done.\n')
 
     # Print model summary
-    for y_col in y_col_list:
-        summary_str = str(var_model.summary())
-        if print_result_ind:
-            print_model_result(summary_str, y_col)
+    summary_str = str(var_model.summary())
+    if print_result_ind:
+        print_model_result(summary_str, y_col_list)
     
     return var_model
 
@@ -112,10 +114,13 @@ def get_significant_variable(var_model: VARResults,
     if isinstance(y_col_list, str):
         y_col_list = [y_col_list]
     
+    y_col_list = [col for col in var_data.columns if col.split('_diff_')[0] in y_col_list]
+    
     var_model_pvalues_df = var_model.pvalues
 
     signf_cols_list = []
-    for y_col in y_col_list:
+    for y_col in y_col_list: 
+        print(f'For {y_col},')
         pvalues_df_temp = var_model_pvalues_df \
             [(var_model_pvalues_df[y_col] < p_val_thrhld) & (var_model_pvalues_df.index != 'const')] \
             [y_col]
@@ -123,7 +128,6 @@ def get_significant_variable(var_model: VARResults,
         signf_cols_list_temp = pvalues_df_temp.index.to_list()
         signf_pvalues_list_temp = pvalues_df_temp.values.tolist()
 
-        print(f'For {y_col},')
         if len(signf_cols_list_temp) > 0:
             print(f'The following variables are significant (p-value < {p_val_thrhld}):')
             print('(variable name: p-value)')
@@ -145,9 +149,11 @@ def add_lagged_column(df: pd.DataFrame,
         col_part_list = col.split('.', 1)
         
         if col_part_list[0][0] == 'L':
-            lag_nbr = int(col_part_list[0][1:])
-            col = col_part_list[1]
-            df_lag[f'L{lag_nbr}.{col}'] = df_lag[col].shift(lag_nbr).fillna(0)
-
+            try:
+                lag_nbr = int(col_part_list[0][1:])
+                col = col_part_list[1]
+                df_lag[f'L{lag_nbr}.{col}'] = df_lag[col].shift(lag_nbr).fillna(0)
+            except:
+                pass
+    
     return df_lag
-
