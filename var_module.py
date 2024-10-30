@@ -7,6 +7,27 @@ from typing import List, Union
 from covid_module import print_or_not
 
 
+def remove_first_last_zero_rows(df: pd.DataFrame,
+                                col_list: List[str]=None) -> pd.DataFrame:
+    if col_list is None:
+        col_list = df.columns
+
+    print('Originally:')
+    print(f'First Index: {df.index.min()}')
+    print(f'Last Index: {df.index.max()}\n')
+    
+    first_index = df[df[col_list].ne(0)].first_valid_index()
+    last_index = df[df[col_list].ne(0)].last_valid_index()
+    
+    print('After removing first and last zero rows:')
+    print(f'First Index: {first_index}')
+    print(f'Last Index: {last_index}')
+    
+    df = df[(first_index <= df.index) & (df.index <= last_index)]
+
+    return df
+
+
 def stationary_and_difference(df: pd.DataFrame,
                               col_list: List[str]=None,
                               print_ind: bool=False) -> None:
@@ -81,9 +102,6 @@ def fit_var_model(var_data: pd.DataFrame,
         X_col_list = [X_col_list]
     if isinstance(y_col_list, str):
         y_col_list = [y_col_list]
-        
-    X_col_list = [col for col in var_data.columns if col.split('_diff_')[0] in X_col_list]
-    y_col_list = [col for col in var_data.columns if col.split('_diff_')[0] in y_col_list]
     
     # Select required columns
     var_data = var_data[X_col_list + y_col_list]
@@ -95,11 +113,11 @@ def fit_var_model(var_data: pd.DataFrame,
     max_lag_order = var_model.select_order().aic
     
     # Fit the VAR model with selected maximum lag
-    print(f'Fitting the VAR model with maximum lag {max_lag_order} ...')
+    print_or_not(f'Fitting the VAR model with maximum lag {max_lag_order} ...', print_result_ind)
     var_model = var_model.fit(maxlags=max_lag_order)
     # Save the maximum lag order to the model output
     var_model.max_lag_order = max_lag_order
-    print(f'Done.\n')
+    print_or_not(f'Done.\n', print_result_ind)
 
     # Print model summary
     summary_str = str(var_model.summary())
@@ -108,6 +126,7 @@ def fit_var_model(var_data: pd.DataFrame,
     
     return var_model
 
+
 def get_significant_variable(var_model: VARResults,
                              y_col_list: Union[List[str], str],
                              p_val_thrhld: float) -> List[str]:
@@ -115,9 +134,6 @@ def get_significant_variable(var_model: VARResults,
         y_col_list = [y_col_list]
     
     var_model_pvalues_df = var_model.pvalues
-    
-    y_col_list = [col for col in var_model_pvalues_df.columns \
-                      if col.split('_diff_')[0] in y_col_list]
 
     signf_cols_list = []
     for y_col in y_col_list: 

@@ -1,4 +1,9 @@
+import datetime
+import numpy as np
 import pandas as pd
+import random
+
+from typing import Union, List, Set
 
 
 def print_or_not(string: str,
@@ -91,3 +96,97 @@ def get_year_month_part(df: pd.DataFrame,
 #     for value in distinct_values:
 #         new_col_name = col_name + '_' + value
 #         df[new_col_name] = df[col_name].apply(lambda col: 1 if col == value else 0)
+
+
+def get_distance_betwn_lists(list_1: Union[List[str], Set[str]], 
+                             list_2: Union[List[str], Set[str]]) -> float:
+    if (len(list_1) > 0) or (len(list_2) > 0):
+        similarity = len(set(list_1) & set(list_2)) / len(set(list_1) | set(list_2))
+        distance = 1 - similarity
+    else:
+        distance = 0
+    return distance
+
+def get_distance_betwn_columns(df: pd.DataFrame,
+                               col_A: str,
+                               col_B: str,
+                               order: int=1) -> float:
+    num_list_A = df[col_A]
+    num_list_B = df[col_B]
+    
+    if any(val != 0 for val in num_list_A):
+        num_list_A = num_list_A / sum(num_list_A)
+    
+    if any(val != 0 for val in num_list_B):
+        num_list_B = num_list_B / sum(num_list_B)
+    
+    return np.linalg.norm(num_list_A - num_list_B, order)
+
+
+def get_partitions(min_dt: datetime.datetime,
+                   max_dt: datetime.datetime,
+                   prtitn_nbr: int=1,
+                   min_days: int=30,
+                   random_state: int=2024) -> List[datetime.datetime]:
+    if max_dt <  min_dt + datetime.timedelta(min_days * (prtitn_nbr+1)):
+        raise ValueError('Not enough days for partitions')
+    
+    remain_days = (max_dt - min_dt).days - min_days * (prtitn_nbr+1)
+    
+    random.seed(random_state)
+    random_int_list = sorted([random.randint(0, remain_days) for _ in range(prtitn_nbr)])
+    
+    return [min_dt + datetime.timedelta(days = min_days*i + days) \
+                for i, days in enumerate(random_int_list, 1)]
+
+
+def repartitions_using_distance(df: pd.DataFrame,
+                                dt_list: List[datetime.datetime],
+                                fit_model_func,
+                                get_distance_func,
+                                min_thrhld: float,
+                                max_thrhld: float) -> List[datetime.datetime]:
+    dt_list.insert(0, df.index.min())
+    dt_list.insert(len(dt_list), df.index.max())
+    dt_list = sorted(list(set(dt_list)))
+    dt_list = [dt for dt in dt_list if (df.index.min() <= dt) and (dt <= df.index.max())]
+    
+    prev_df = df[(df.index >= dt_list[0]) & (df.index <= dt_list[1])]
+    prev_model = fit_model_func(prev_df)
+    i = 1
+    while i < len(dt_list)-1:
+        curr_df = df[(df.index >= dt_list[i]) & (df.index <= dt_list[i+1])]
+        curr_model = fit_model_func(curr_df)
+        if get_distance_func(prev_model, curr_model) < min_thrhld:
+            print(f'Removing {dt_list[i]}')
+            del dt_list[i]
+            if i < len(dt_list)-2:
+                prev_df = df[(df.index >= dt_list[i]) & (df.index <= dt_list[i+1])]
+                prev_model = fit_model_func(prev_df)
+        prev_model = curr_model
+        i += 1
+    
+    prev_df = df[(df.index >= dt_list[0]) & (df.index <= dt_list[1])]
+    prev_model = fit_model_func(prev_df)
+    i = 1
+    while i < len(dt_list)-1:
+        curr_df = df[(df.index >= dt_list[i]) & (df.index <= dt_list[i+1])]
+        curr_model = fit_model_func(curr_df)
+        if get_distance_func(prev_model, curr_model) > max_thrhld:
+            next_dt = dt_list[i+1]
+            if dt_list[i+1] >=  dt_list[i-1] + datetime.timedelta(30*(2+1)):
+                print(f'Adding at {dt_list[i]}')
+                del dt_list[i]
+                dt_list[i:i] = get_partitions(min_dt=dt_list[i-1],
+                                              max_dt=dt_list[i+1],
+                                              prtitn_nbr=2,
+                                              min_days=30)
+                i = dt_list.index(next_dt)
+                if i < len(dt_list)-2:
+                    prev_df = df[(df.index >= dt_list[i]) & (df.index <= dt_list[i+1])]
+                    prev_model = fit_model_func(prev_df)
+        else:
+            prev_model = curr_model
+        i += 1
+    print(f'----------------- length: {len(dt_list)} -----------------')
+    return dt_list
