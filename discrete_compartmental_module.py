@@ -15,15 +15,21 @@ def plot_compartmental_model_result(index_x_dt,
                        'Recovered': 'g'}
     fig = plt.figure(figsize=(12, 4))
     predicted_plus_list, compartment_counts_list = fitted_model.output
+    
+    legend_list = []
     for counts, class_name in zip(compartment_counts_list, fitted_model.classes):
-        plt.plot(index_x_dt, counts, line_color_dict[class_name])
+        if class_name != 'Susceptible':
+            plt.plot(index_x_dt, counts, line_color_dict[class_name])
+            legend_list.append(class_name)
+    
     plt.plot(index_x_dt, predicted_plus_list[fitted_model.classes.index('Infectious')-1], 'r--')
     plt.plot(index_x_dt, true_plus_list[0], 'k*:')
+    legend_list.extend(['Predicted new case counts', 'True new case counts'])
     plt.title('Compartmental Model Result')
     plt.xlabel('Date')
     plt.ylabel('Count')
     plt.grid('True')
-    plt.legend(fitted_model.classes + ['Predicted new case counts'] + ['True new case counts'])
+    plt.legend(legend_list)
     plt.plot()
 
 # Discrete Compartmental Model (Base Class)
